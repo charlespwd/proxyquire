@@ -31,5 +31,23 @@ describe('Module: proxyquire', () => {
       const getA = () => proxyquire('./a', {});
       expect(getA).not.to.throw('Woops');
     });
+
+    it('should clean up the module cache if one of the mocks provided doesnt exist', () => {
+      const getC = () => proxyquire('./c', {
+        './a': { default: () => 'hello mocks' },
+        './b': { default: () => 'hello mocks' },
+        './wat-this-path-does-not-exist': () => 'hello mock',
+      });
+      try {
+        getC();
+      } catch (e) {
+        expect(e).to.exist;
+      }
+
+      const a = require('./a');
+      const b = require('./b');
+      expect(b.default()).to.equal('hello world');
+      expect(a.default()).to.equal('hello world');
+    });
   });
 });

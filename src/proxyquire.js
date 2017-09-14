@@ -32,8 +32,10 @@ function addToCache(moduleId, module) {
 }
 
 function replaceCacheEntry(moduleId, module) {
-  removeFromCache(moduleId);
-  addToCache(moduleId, module);
+  if (module) {
+    removeFromCache(moduleId);
+    addToCache(moduleId, module);
+  }
 }
 
 function warmUpModuleCache(request, parent) {
@@ -91,14 +93,14 @@ export default function proxyquire(request, stubs) {
   // ourselves and put it back in the cache once we're done.
   const trueModule = warmUpModuleCache(request, parent);
 
-  // We replace the real modules from the Module cache by our stubs.
-  forEach(stubs, (stub, stubPath) => {
-    const moduleId = getModuleId(stubPath, requestId);
-    tempCache.set(moduleId, getFromCache(moduleId));
-    replaceCacheEntry(moduleId, makeMockModule(moduleId, stub));
-  });
-
   try {
+    // We replace the real modules from the Module cache by our stubs.
+    forEach(stubs, (stub, stubPath) => {
+      const moduleId = getModuleId(stubPath, requestId);
+      tempCache.set(moduleId, getFromCache(moduleId));
+      replaceCacheEntry(moduleId, makeMockModule(moduleId, stub));
+    });
+
     moduleLoadedWithStubs = Module._load(request, parent);
   } catch (e) {
     // We actually want to show that error, but we also want to clean up
