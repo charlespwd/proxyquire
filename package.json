@@ -1,0 +1,23 @@
+{
+  "name": "proxyquire",
+  "version": "1.0.0",
+  "description": "",
+  "main": "lib/proxyquire.js",
+  "scripts": {
+    "build": "babel src -d lib",
+    "test": "mocha test/**/*.spec.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "babel": "^6.23.0",
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.6.0",
+    "chai": "^4.1.2",
+    "mocha": "^3.5.3"
+  },
+  "dependencies": {
+    "lodash.foreach": "^4.5.0",
+    "resolve": "^1.4.0"
+  }
+}
