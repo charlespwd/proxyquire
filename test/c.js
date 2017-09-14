@@ -1,7 +1,5 @@
+import a from './a';
 import b from './b';
 
-export default function a() {
-  return b();
-};
-
+export const valueOfA = a();
 export const valueOfB = b();

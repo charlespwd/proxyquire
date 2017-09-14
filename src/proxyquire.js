@@ -7,20 +7,13 @@ const path = require('path');
 function getModuleId(request, parentPath) {
   return resolve.sync(request, {
     basedir: path.dirname(parentPath),
+    extensions: Object.keys(require.extensions),
   });
 }
 
 function makeMockModule(moduleId, exports) {
   const mockedModule = new Module(moduleId);
-
-  // Unless you're explicitly setting 'default' in the exports object, we
-  // assume that you might want it to be the default.
-  if (!exports.default) {
-    exports.default = exports;
-  }
-
   mockedModule.exports = exports;
-
   return mockedModule;
 }
 
@@ -80,6 +73,8 @@ removeFromCache(require.resolve(__filename));
  * @returns {exports}
  */
 export default function proxyquire(request, stubs) {
+  let error;
+  let moduleLoadedWithStubs;
   const parent = module.parent; // fancy node.js thing that means 'the module which required *this file*'
   const requestId = getModuleId(request, parent.filename);
 
@@ -103,8 +98,14 @@ export default function proxyquire(request, stubs) {
     replaceCacheEntry(moduleId, makeMockModule(moduleId, stub));
   });
 
-  // We load the module with the stubs in the cache instead
-  const moduleLoadedWithStubs = Module._load(request, parent);
+  try {
+    moduleLoadedWithStubs = Module._load(request, parent);
+  } catch (e) {
+    // We actually want to show that error, but we also want to clean up
+    // after ourselves before we do anything of the sort. Otherwise we'd be
+    // leaving the mocks in the module cache... and that's pretty bad!
+    error = e;
+  }
 
   // We clean up after ourselves by putting back the true module values
   // into the cache
@@ -117,8 +118,13 @@ export default function proxyquire(request, stubs) {
   // We put back the module value into the cache
   replaceCacheEntry(requestId, trueModule);
 
+  if (error) {
+    // finally throw that nasty error!
+    throw error;
+  }
+
   return moduleLoadedWithStubs;
 }
 
 // temporary, while w
-export const noCallThru = proxyquire;
+export const noCallThru = () => proxyquire;
