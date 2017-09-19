@@ -143,3 +143,6 @@ export default function proxyquire(request, stubs) {
 
 // temporary, while w
 export const noCallThru = () => proxyquire;
+
+// exported for testing against memory leaks
+export const __parent__ = module.parent;

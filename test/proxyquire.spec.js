@@ -49,5 +49,11 @@ describe('Module: proxyquire', () => {
       expect(b.default()).to.equal('hello world');
       expect(a.default()).to.equal('hello world');
     });
+
+    it('should not leak on parent.children', () => {
+      const a = proxyquire('./a', {
+        './b': () => 'hello mock',
+      });
+    });
   });
 });
