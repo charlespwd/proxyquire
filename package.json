@@ -5,7 +5,8 @@
   "main": "lib/proxyquire.js",
   "scripts": {
     "build": "babel src -d lib",
-    "test": "mocha test/**/*.spec.js"
+    "test": "mocha test/**/*.spec.js",
+    "test:watch": "mocha test/**/*.spec.js --watch"
   },
   "author": "",
   "license": "ISC",

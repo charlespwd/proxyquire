@@ -46,6 +46,9 @@ function warmUpModuleCache(request, parent) {
   // instantiated with a stub instead of the real thing.
   Module._load(request, parent);
 
+  // the module should not be a child to this module.
+  parent.children.pop();
+
   // We're only doing this because we're nice and we clean up after ourselves
   const module = getFromCache(moduleId);
 
@@ -57,6 +60,11 @@ function warmUpModuleCache(request, parent) {
 
 // delete this module from the cache to force re-require in order to allow resolving test module via parent.module
 removeFromCache(require.resolve(__filename));
+// delete this module from the module.parent children to prevent leaks
+module.parent.children.splice(
+  module.parent.children.indexOf(module),
+  1,
+);
 
 /**
  * proxyquire - require a module with a list of mocks instead of their real implementations
@@ -80,6 +88,7 @@ export default function proxyquire(request, stubs) {
   const parent = module.parent; // fancy node.js thing that means 'the module which required *this file*'
   const requestId = getModuleId(request, parent.filename);
 
+
   // We store the "real" modules in here so that we can clean up after
   // ourselves after we have loaded the module.
   //
@@ -102,6 +111,10 @@ export default function proxyquire(request, stubs) {
     });
 
     moduleLoadedWithStubs = Module._load(request, parent);
+
+    // the mocked module should not be a child of this module.
+    parent.children.pop();
+
   } catch (e) {
     // We actually want to show that error, but we also want to clean up
     // after ourselves before we do anything of the sort. Otherwise we'd be
