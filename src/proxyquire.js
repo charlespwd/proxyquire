@@ -8,6 +8,7 @@ function getModuleId(request, parentPath) {
   return resolve.sync(request, {
     basedir: path.dirname(parentPath),
     extensions: Object.keys(require.extensions),
+    paths: process.env.NODE_PATH && [process.env.NODE_PATH],
   });
 }
 
@@ -87,7 +88,6 @@ export default function proxyquire(request, stubs) {
   let moduleLoadedWithStubs;
   const parent = module.parent; // fancy node.js thing that means 'the module which required *this file*'
   const requestId = getModuleId(request, parent.filename);
-
 
   // We store the "real" modules in here so that we can clean up after
   // ourselves after we have loaded the module.
