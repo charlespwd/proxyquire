@@ -6,16 +6,21 @@ describe('Module: proxyquire', () => {
   let a;
   let b;
 
+  beforeEach(() => {
+    a = undefined;
+    b = undefined;
+  });
+
   describe('without mocks', () => {
     it('should load the module as is', () => {
-      const a = proxyquire('./a', {}).default;
+      a = proxyquire('./a', {}).default;
       expect(a()).to.equal('hello world');
     });
   });
 
   describe('with mocks', () => {
     it('should load the mock instead', () => {
-      const a = proxyquire('./a', {
+      a = proxyquire('./a', {
         './b': () => 'hello mock',
       });
       expect(a.default()).to.equal('hello mock');
@@ -44,14 +49,14 @@ describe('Module: proxyquire', () => {
         expect(e).to.exist;
       }
 
-      const a = require('./a');
-      const b = require('./b');
+      a = require('./a');
+      b = require('./b');
       expect(b.default()).to.equal('hello world');
       expect(a.default()).to.equal('hello world');
     });
 
     it('should not leak on parent.children', () => {
-      const a = proxyquire('./a', {
+      a = proxyquire('./a', {
         './b': () => 'hello mock',
       });
     });

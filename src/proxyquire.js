@@ -1,14 +1,23 @@
 import Module from 'module';
 import resolve from 'resolve';
 import forEach from 'lodash.foreach';
+import * as aliases from './aliases';
 const path = require('path');
+
+function getRequest(request, parentPath) {
+  const parentDir = parentPath;
+  if (aliases.isAliased(request)) {
+    return aliases.relative(parentDir, request);
+  } else {
+    return request;
+  }
+}
 
 // The moduleId is the absolute path of the module on your system.
 function getModuleId(request, parentPath) {
   return resolve.sync(request, {
     basedir: path.dirname(parentPath),
     extensions: Object.keys(require.extensions),
-    paths: process.env.NODE_PATH && [process.env.NODE_PATH],
   });
 }
 
@@ -83,10 +92,11 @@ module.parent.children.splice(
  * @param {Stubs} stubs - a key value pair of modules to mock and the mock implementations
  * @returns {exports}
  */
-export default function proxyquire(request, stubs) {
+export default function proxyquire(req, stubs) {
   let error;
   let moduleLoadedWithStubs;
   const parent = module.parent; // fancy node.js thing that means 'the module which required *this file*'
+  const request = getRequest(req, parent.filename);
   const requestId = getModuleId(request, parent.filename);
 
   // We store the "real" modules in here so that we can clean up after
@@ -105,7 +115,8 @@ export default function proxyquire(request, stubs) {
   try {
     // We replace the real modules from the Module cache by our stubs.
     forEach(stubs, (stub, stubPath) => {
-      const moduleId = getModuleId(stubPath, requestId);
+      const stubRequest = getRequest(stubPath, requestId);
+      const moduleId = getModuleId(stubRequest, requestId);
       tempCache.set(moduleId, getFromCache(moduleId));
       replaceCacheEntry(moduleId, makeMockModule(moduleId, stub));
     });
@@ -125,7 +136,8 @@ export default function proxyquire(request, stubs) {
   // We clean up after ourselves by putting back the true module values
   // into the cache
   forEach(stubs, (stub, stubPath) => {
-    const moduleId = getModuleId(stubPath, requestId);
+    const stubRequest = getRequest(stubPath, requestId);
+    const moduleId = getModuleId(stubRequest, requestId);
     replaceCacheEntry(moduleId, tempCache.get(moduleId));
     tempCache.delete(moduleId); // because I'm paranoid
   });
@@ -146,3 +158,7 @@ export const noCallThru = () => proxyquire;
 
 // exported for testing against memory leaks
 export const __parent__ = module.parent;
+
+export const alias = aliases.add;
+export const unalias = aliases.remove;
+export const getAliases = aliases.get;
